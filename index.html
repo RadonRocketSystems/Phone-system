@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phone Verification</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<body>
+    <div id="errors"></div>
+    <form id="enter_number">
+        <p>Enter your phone number:</p>
+        <p><input type="tel" name="phone_number" id="phone_number" autocomplete="tel" required /></p>
+        <p><input type="submit" name="submit" value="Verify" /></p>
+    </form>
+    <div id="verify_code" style="display: none;">
+        <p>Sending verification code...</p>
+        <p>Enter the verification code received:</p>
+        <input type="text" id="verification_code_input" required />
+        <button onclick="verifyCode()">Submit</button>
+        <p id="status"></p>
+    </div>
+    <script>
+        $(document).ready(function(){
+            $("#enter_number").submit(function(e) {
+                e.preventDefault();
+                initiateVerification();
+            });
+        });
+
+        function initiateVerification() {
+            var phoneNumber = $("#phone_number").val();
+            $.ajax({
+                url: "https://api.twilio.com/2010-04-01/Accounts/AC34d2f4e10684afadbd8daa2f36c02479/Messages.json",
+                type: "POST",
+                headers: {
+                    "Authorization": "Basic " + btoa("AC34d2f4e10684afadbd8daa2f36c02479:4a5414b8d9f7390952b4854d2ee05647")
+                },
+                data: {
+                    "To": phoneNumber,
+                    "From": "+18667871423",
+                    "Body": "Your verification code is: " + generateVerificationCode()
+                },
+                success: function(response) {
+                    $("#verify_code").fadeIn();
+                    $("#enter_number").fadeOut();
+                },
+                error: function(xhr, status, error) {
+                    $("#errors").text("Failed to send verification code. Please try again.");
+                }
+            });
+        }
+
+        function generateVerificationCode() {
+            // Generate a random 6-digit verification code
+            return Math.floor(100000 + Math.random() * 900000);
+        }
+
+        function verifyCode() {
+            var enteredCode = $("#verification_code_input").val();
+            var expectedCode = localStorage.getItem("verification_code");
+
+            if (enteredCode === expectedCode) {
+                $("#status").text("Verification successful!");
+                // Proceed with form submission or other logic
+            } else {
+                $("#status").text("Verification failed. Please try again.");
+            }
+        }
+    </script>
+</body>
+</html>
